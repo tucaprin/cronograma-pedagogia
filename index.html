@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronograma de Estudos – Pedagogia 2º Período</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #FDF0F5;
+  --warm-white: #FFF5F8;
+  --ink: #6B1235;
+  --ink-light: #8B2252;
+  --ink-muted: #B06080;
+  --border: #F0C0D4;
+  --hist: #BE185D; --hist-bg: #FDF2F8;
+  --ppp:  #9D174D; --ppp-bg:  #FCE7F3;
+  --psi:  #BE185D; --psi-bg:  #FDF2F8;
+  --met:  #831843; --met-bg:  #FCE7F3;
+  --sem:  #DB2777; --sem-bg:  #FDF2F8;
+  --rev:  #EC4899; --rev-bg:  #FFF0F6;
+  --brk:  #9D174D; --brk-bg:  #FCE7F3;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.app {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 5rem;
+}
+
+@media (min-width: 700px) {
+  .app {
+    grid-template-columns: 1fr 340px;
+    gap: 0 1.5rem;
+    align-items: start;
+  }
+  .col-left  { grid-column: 1; }
+  .col-right { grid-column: 2; grid-row: 1 / 99; position: sticky; top: 1rem; }
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  grid-column: 1 / -1;
+}
+header .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: .4rem; }
+header h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.4rem,5vw,2rem); font-weight: 700; color: var(--ink); margin-bottom: .3rem; }
+header h1 em { font-style: italic; color: var(--ink-light); }
+header .subtitle { font-size: 12px; color: var(--ink-muted); }
+
+/* ── NAV TABS ── */
+.main-tabs {
+  display: flex;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .3rem;
+  margin-bottom: 1.25rem;
+  gap: .3rem;
+  grid-column: 1 / -1;
+}
+.main-tab {
+  flex: 1; border: none; border-radius: 9px; padding: .55rem .5rem;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; background: none; color: var(--ink-muted);
+  transition: background .2s, color .2s; text-align: center;
+}
+.main-tab.active { background: #BE185D; color: #fff; }
+
+/* ── TIMER ── */
+.timer-widget {
+  background: linear-gradient(135deg, #831843 0%, #BE185D 100%); border-radius: 14px; padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .8rem;
+}
+.t-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; }
+.t-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.t-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: #fff; }
+.t-display { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; color: #fff; line-height: 1; min-width: 130px; text-align: right; }
+.t-display.running { color: #FBCFE8; }
+.t-display.done    { color: #FCA5A5; }
+.t-bar-wrap { height: 3px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; }
+.t-bar { height: 100%; background: #FBCFE8; border-radius: 2px; transition: width 1s linear; width: 100%; }
+.t-bar.done { background: #FCA5A5; }
+.ctrl { border: none; border-radius: 7px; padding: .4rem .9rem; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: transform .1s; }
+.ctrl:active { transform: scale(.95); }
+.ctrl.start { background: #FBCFE8; color: #831843; }
+.ctrl.pause { background: #FDE68A; color: #78350F; }
+.ctrl.reset { background: rgba(255,255,255,.18); color: rgba(255,255,255,.85); }
+
+/* ── PALETTE ── */
+.palette-wrap { background: var(--warm-white); border: 1px solid var(--border); border-radius: 14px; padding: .9rem 1.1rem; margin-bottom: 1.25rem; }
+.section-title { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: .65rem; display: flex; align-items: center; gap: .5rem; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.chips { display: flex; flex-wrap: wrap; gap: .45rem; }
+.chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 8px; padding: .35rem .65rem; font-size: 11px; font-weight: 600; cursor: grab; border-left: 3px solid; user-select: none; transition: transform .15s; }
+.chip:active { cursor: grabbing; transform: scale(1.04); }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.chip.hist { background: var(--hist-bg); border-color: var(--hist); color: var(--hist); }
+.chip.ppp  { background: var(--ppp-bg);  border-color: var(--ppp);  color: var(--ppp); }
+.chip.psi  { background: var(--psi-bg);  border-color: var(--psi);  color: var(--psi); }
+.chip.met  { background: var(--met-bg);  border-color: var(--met);  color: var(--met); }
+.chip.sem  { background: var(--sem-bg);  border-color: var(--sem);  color: var(--sem); }
+.chip.rev  { background: var(--rev-bg);  border-color: var(--rev);  color: var(--rev); }
+
+/* ── DAY PILLS ── */
+.day-selector { display: flex; gap: .35rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.day-pill { border: 1px solid var(--border); border-radius: 20px; padding: .3rem .75rem; font-size: 11px; font-weight: 600; color: var(--ink-muted); cursor: pointer; background: var(--warm-white); font-family: 'DM Sans', sans-serif; transition: background .15s, color .15s; }
+.day-pill.active { background: #BE185D; color: #fff; border-color: #BE185D; }
+
+/* ── TIMELINE ── */
+.timeline { display: flex; flex-direction: column; }
+.tl-row { display: grid; grid-template-columns: 78px 14px 1fr; gap: 0 .5rem; position: relative; }
+.tl-row::after { content: ''; position: absolute; left: 84px; top: 0; bottom: 0; width: 2px; background: var(--border); z-index: 0; }
+.tl-row:first-child::after { top: 14px; }
+.tl-row:last-child::after  { height: 14px; top: 0; bottom: auto; }
+.tl-time { text-align: right; padding-top: 4px; }
+.tl-time .tl { font-size: 11px; font-weight: 700; color: var(--ink-muted); display: block; }
+.tl-time .td { font-size: 9px; color: var(--ink-muted); display: block; margin-top: 1px; }
+.tl-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border); background: var(--warm-white); margin-top: 3px; position: relative; z-index: 1; flex-shrink: 0; transition: border-color .2s; }
+.tl-content { padding: 0 0 1rem .35rem; position: relative; z-index: 1; }
+.sb { border-radius: 10px; padding: .55rem .8rem; background: rgba(0,0,0,.02); border: 1.5px dashed var(--border); cursor: pointer; transition: background .15s, border-color .15s; }
+.sb:hover { background: rgba(0,0,0,.04); }
+.sb.drag-over { background: rgba(236,72,153,.08) !important; border-color: #EC4899 !important; }
+.sb.assigned { border: none; border-left: 3px solid; cursor: pointer; }
+.sb.hist { background: var(--hist-bg); border-color: var(--hist); }
+.sb.ppp  { background: var(--ppp-bg);  border-color: var(--ppp); }
+.sb.psi  { background: var(--psi-bg);  border-color: var(--psi); }
+.sb.met  { background: var(--met-bg);  border-color: var(--met); }
+.sb.sem  { background: var(--sem-bg);  border-color: var(--sem); }
+.sb.rev  { background: var(--rev-bg);  border-color: var(--rev); }
+.sb .sb-tag  { font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .55; margin-bottom: 2px; display: block; }
+.sb .sb-main { font-size: 12px; font-weight: 600; color: var(--ink-light); line-height: 1.3; }
+.sb .sb-hint { font-size: 10px; color: var(--ink-muted); margin-top: 2px; }
+.sb .sb-remove { float: right; background: none; border: none; cursor: pointer; font-size: 11px; opacity: .3; font-family: inherit; color: inherit; margin-left: .4rem; padding: 0; }
+.sb .sb-remove:hover { opacity: .65; }
+.brk { display: inline-flex; align-items: center; gap: .4rem; background: #FCE7F3; border: 1px solid #F9A8D4; border-radius: 7px; padding: .28rem .6rem; font-size: 11px; color: #9D174D; font-weight: 500; }
+.sec-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-muted); margin: 1.25rem 0 .75rem; display: flex; align-items: center; gap: .5rem; }
+.sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── TOTALS ── */
+.totals { margin-top: 1.5rem; padding: 1rem 1.2rem; background: var(--warm-white); border: 1px solid var(--border); border-radius: 12px; }
+.totals h3 { font-family: 'Playfair Display', serif; font-size: .9rem; font-weight: 700; margin-bottom: .75rem; color: var(--ink); }
+.totals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px,1fr)); gap: .5rem; }
+.ti { display: flex; flex-direction: column; gap: 1px; }
+.ti .tl2 { font-size: 10px; color: var(--ink-muted); font-weight: 500; }
+.ti .tv  { font-size: 1.1rem; font-family: 'Playfair Display', serif; font-weight: 700; line-height: 1.1; }
+
+/* ══════════════════════════════════
+   TO-DO
+══════════════════════════════════ */
+.todo-panel {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.todo-header {
+  padding: .9rem 1.1rem .6rem;
+  border-bottom: 1px solid var(--border);
+}
+.todo-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-weight: 700; color: var(--ink);
+  margin-bottom: .5rem;
+}
+
+/* subject filter tabs */
+.todo-filters {
+  display: flex; flex-wrap: wrap; gap: .3rem;
+  margin-bottom: .5rem;
+}
+.tf-btn {
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: .2rem .6rem; font-size: 10px; font-weight: 600;
+  cursor: pointer; background: none; color: var(--ink-muted);
+  font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.tf-btn.active { color: #fff; border-color: transparent; }
+
+/* add task */
+.todo-add {
+  display: flex; gap: .4rem; padding: .75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.todo-add input {
+  flex: 1; border: 1px solid var(--border); border-radius: 8px;
+  padding: .4rem .65rem; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; background: var(--cream); color: var(--ink);
+}
+.todo-add input:focus { outline: none; border-color: var(--ink-muted); }
+.todo-add select {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: .4rem .5rem; font-family: 'DM Sans', sans-serif;
+  font-size: 11px; background: var(--cream); color: var(--ink);
+  cursor: pointer;
+}
+.todo-add select:focus { outline: none; }
+.add-task-btn {
+  border: none; border-radius: 8px; padding: .4rem .75rem;
+  background: #BE185D; color: #fff;
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: opacity .15s;
+}
+.add-task-btn:hover { opacity: .85; }
+
+/* task list */
+.todo-list {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: .5rem .75rem;
+}
+.todo-empty {
+  text-align: center; padding: 2rem 1rem;
+  font-size: 12px; color: var(--ink-muted);
+}
+
+.task-item {
+  display: flex; align-items: flex-start; gap: .5rem;
+  padding: .55rem .4rem;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+  border-radius: 6px;
+}
+.task-item:last-child { border-bottom: none; }
+.task-item:hover { background: rgba(0,0,0,.02); }
+
+.task-check {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 2px solid var(--border); flex-shrink: 0;
+  cursor: pointer; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.task-check.done { color: #fff; }
+
+.task-body { flex: 1; min-width: 0; }
+.task-text {
+  font-size: 12px; color: var(--ink-light); line-height: 1.35;
+  word-break: break-word;
+}
+.task-text.done { text-decoration: line-through; opacity: .45; }
+.task-badge {
+  display: inline-block; border-radius: 4px; padding: 1px 5px;
+  font-size: 9px; font-weight: 700; margin-top: 3px;
+  letter-spacing: .04em;
+}
+
+.task-del {
+  background: none; border: none; cursor: pointer;
+  font-size: 11px; color: var(--ink-muted); opacity: .3;
+  flex-shrink: 0; padding: 0; line-height: 1;
+  transition: opacity .15s;
+}
+.task-del:hover { opacity: .7; }
+
+/* progress bar per subject */
+.todo-progress { padding: .75rem 1rem; border-top: 1px solid var(--border); }
+.prog-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .35rem; }
+.prog-label { font-size: 10px; font-weight: 600; color: var(--ink-muted); min-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog-bar-wrap { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.prog-bar { height: 100%; border-radius: 3px; transition: width .4s; }
+.prog-count { font-size: 10px; color: var(--ink-muted); min-width: 28px; text-align: right; }
+
+/* ── MODAL ── */
+.modal-bd { position: fixed; inset: 0; background: rgba(131,24,67,.25); display: flex; align-items: center; justify-content: center; z-index: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.modal-bd.open { opacity: 1; pointer-events: all; }
+.modal { background: var(--warm-white); border-radius: 14px; padding: 1.4rem; width: min(310px,90vw); box-shadow: 0 8px 40px rgba(131,24,67,.15); transform: translateY(10px); transition: transform .2s; }
+.modal-bd.open .modal { transform: translateY(0); }
+.modal h3 { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: .9rem; color: var(--ink); }
+.modal-list { display: flex; flex-direction: column; gap: .35rem; }
+.msb { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: .45rem .75rem; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; }
+.modal-foot { margin-top: .9rem; display: flex; justify-content: flex-end; }
+.mbtn { border: none; border-radius: 8px; padding: .38rem .85rem; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; background: #FCE7F3; color: #9D174D; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: #831843; color: #fff; padding: .6rem 1.2rem; border-radius: 9px; font-size: 12px; font-weight: 600; opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; white-space: nowrap; z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header style="grid-column:1/-1">
+    <p class="eyebrow">UFPE · Pedagogia · 2º Período</p>
+    <h1>Cronograma de <em>Estudos</em></h1>
+    <p class="subtitle">Semana (19h–22h) · Fim de semana (dia todo) · To-do por disciplina</p>
+  </header>
+
+  <!-- MAIN TABS -->
+  <div class="main-tabs" style="grid-column:1/-1">
+    <button class="main-tab active" onclick="switchTab('week')">📚 Semana</button>
+    <button class="main-tab" onclick="switchTab('weekend')">🌅 Fim de Semana</button>
+    <button class="main-tab" onclick="switchTab('todo')">✅ To-do</button>
+  </div>
+
+  <!-- LEFT COLUMN: schedule views -->
+  <div class="col-left">
+
+    <!-- WEEK VIEW -->
+    <div id="view-week">
+      <div class="timer-widget">
+        <div class="t-top">
+          <div><div class="t-eyebrow">Estudando agora</div><div class="t-name" id="tName">Selecione um bloco</div></div>
+          <div class="t-display" id="tDisplay">00:00</div>
+        </div>
+        <div class="t-bar-wrap"><div class="t-bar" id="tBar"></div></div>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <button class="ctrl start" id="btnStart" onclick="startTimer()">▶ Iniciar</button>
+          <button class="ctrl pause" id="btnPause" onclick="pauseTimer()" style="display:none">⏸ Pausar</button>
+          <button class="ctrl reset" onclick="resetTimer()">↺ Resetar</button>
+          <span style="font-size:10px;color:rgba(255,255,255,.35);" id="tMeta"></span>
+        </div>
+      </div>
+
+      <div class="palette-wrap">
+        <div class="section-title">Disciplinas — arraste para os blocos ou clique</div>
+        <div class="chips" id="palette">
+          <div class="chip hist" draggable="true" data-key="hist" data-label="História Geral da Edu."><div class="dot" style="background:var(--hist)"></div>História Geral da Edu.</div>
+          <div class="chip ppp"  draggable="true" data-key="ppp"  data-label="PPP1 – Processos Formativos"><div class="dot" style="background:var(--ppp)"></div>PPP1</div>
+          <div class="chip psi"  draggable="true" data-key="psi"  data-label="Psicologia do Ensino"><div class="dot" style="background:var(--psi)"></div>Psicologia do Ensino</div>
+          <div class="chip met"  draggable="true" data-key="met"  data-label="Metodologia da Pesquisa"><div class="dot" style="background:var(--met)"></div>Metodologia da Pesquisa</div>
+          <div class="chip sem"  draggable="true" data-key="sem"  data-label="Seminário Espaços Não-Esc."><div class="dot" style="background:var(--sem)"></div>Seminário</div>
+          <div class="chip rev"  draggable="true" data-key="rev"  data-label="Revisão / Anki"><div class="dot" style="background:var(--rev)"></div>Revisão / Anki</div>
+        </div>
+      </div>
+
+      <div class="day-selector" id="day-selector"></div>
+      <div class="timeline" id="tl-week"></div>
+
+      <div class="totals">
+        <h3 id="totals-title">Horas por disciplina</h3>
+        <div class="totals-grid" id="totals-grid"></div>
+      </div>
+    </div>
+
+    <!-- WEEKEND VIEW -->
+    <div id="view-weekend" class="hidden">
+      <div class="timeline" id="tl-weekend"></div>
+      <div class="totals" style="margin-top:1.5rem">
+        <h3>Horas no fim de semana</h3>
+        <div class="totals-grid" id="totals-grid-we"></div>
+      </div>
+    </div>
+
+    <!-- TODO VIEW (mobile only, desktop shows right col) -->
+    <div id="view-todo" class="hidden"></div>
+
+  </div>
+
+  <!-- RIGHT COLUMN: TO-DO (always visible on desktop) -->
+  <div class="col-right" id="todo-right">
+    <div class="todo-panel">
+      <div class="todo-header">
+        <h2>✅ To-do</h2>
+        <div class="todo-filters" id="todo-filters"></div>
+      </div>
+
+      <div class="todo-add">
+        <input type="text" id="task-input" placeholder="Nova tarefa…" onkeydown="if(event.key==='Enter')addTask()">
+        <select id="task-subject">
+          <option value="hist">História</option>
+          <option value="ppp">PPP1</option>
+          <option value="psi">Psicologia</option>
+          <option value="met">Metodologia</option>
+          <option value="sem">Seminário</option>
+          <option value="rev">Revisão</option>
+        </select>
+        <button class="add-task-btn" onclick="addTask()">＋</button>
+      </div>
+
+      <div class="todo-list" id="todo-list"></div>
+      <div class="todo-progress" id="todo-progress"></div>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+
+<!-- MODAL -->
+<div class="modal-bd" id="modal">
+  <div class="modal">
+    <h3>Qual disciplina neste bloco?</h3>
+    <div class="modal-list" id="modal-list"></div>
+    <div class="modal-foot"><button class="mbtn" onclick="closeModal()">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// SUBJECTS
+// ══════════════════════════════════════════════
+const SUBJECTS = {
+  hist: { label: 'História Geral da Edu.',      color: '#BE185D', bg: '#FDF2F8' },
+  ppp:  { label: 'PPP1 – Processos Formativos', color: '#9D174D', bg: '#FCE7F3' },
+  psi:  { label: 'Psicologia do Ensino',         color: '#C2185B', bg: '#FFF0F6' },
+  met:  { label: 'Metodologia da Pesquisa',      color: '#831843', bg: '#FCE7F3' },
+  sem:  { label: 'Seminário Espaços Não-Esc.',   color: '#DB2777', bg: '#FDF2F8' },
+  rev:  { label: 'Revisão / Anki',               color: '#EC4899', bg: '#FFF0F6' },
+};
+
+const WEEK_TEMPLATE = [
+  { type:'study', id:'w1', start:'19:00', end:'20:30', minutes:90 },
+  { type:'break', start:'20:30', end:'20:45', minutes:15, icon:'☕', note:'Pausa de 15 min' },
+  { type:'study', id:'w2', start:'20:45', end:'22:00', minutes:75 },
+];
+
+const WEEKEND_BLOCKS = [
+  { type:'study', id:'we1', start:'08:00', end:'09:30', minutes:90 },
+  { type:'break', start:'09:30', end:'09:45', minutes:15, icon:'☕', note:'Pausa de 15 min' },
+  { type:'study', id:'we2', start:'09:45', end:'11:15', minutes:90 },
+  { type:'break', start:'11:15', end:'11:30', minutes:15, icon:'🧘', note:'Pausa de 15 min' },
+  { type:'study', id:'we3', start:'11:30', end:'12:30', minutes:60 },
+  { type:'break', start:'12:30', end:'13:30', minutes:60, icon:'🍽️', note:'Almoço — 60 min' },
+  { type:'study', id:'we4', start:'13:30', end:'15:00', minutes:90 },
+  { type:'break', start:'15:00', end:'15:15', minutes:15, icon:'☕', note:'Pausa de 15 min' },
+  { type:'study', id:'we5', start:'15:15', end:'16:45', minutes:90 },
+  { type:'break', start:'16:45', end:'17:00', minutes:15, icon:'🚶', note:'Pausa de 15 min' },
+  { type:'study', id:'we6', start:'17:00', end:'18:30', minutes:90 },
+  { type:'break', start:'18:30', end:'19:30', minutes:60, icon:'🍴', note:'Jantar — 60 min' },
+  { type:'study', id:'we7', start:'19:30', end:'20:30', minutes:60 },
+  { type:'break', start:'20:30', end:'21:00', minutes:30, icon:'🛁', note:'Banho & alongamento' },
+  { type:'study', id:'we8', start:'21:00', end:'21:30', minutes:30 },
+];
+
+const WEEKDAYS = [
+  { id:'seg', label:'Seg' }, { id:'ter', label:'Ter' },
+  { id:'qua', label:'Qua' }, { id:'qui', label:'Qui' },
+  { id:'sex', label:'Sex' },
+];
+
+const assignments = {};
+let activeDay  = 'seg';
+let activeTab  = 'week';
+let dragKey    = null, dragLabel = null;
+let modalTarget = null;
+
+// ── TASKS ──
+// { id, text, key, done }
+let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+let todoFilter = 'all';
+
+function saveTasks() { localStorage.setItem('tasks', JSON.stringify(tasks)); }
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.main-tab').forEach((b,i) => {
+    b.classList.toggle('active', ['week','weekend','todo'][i] === tab);
+  });
+  document.getElementById('view-week').classList.toggle('hidden', tab !== 'week');
+  document.getElementById('view-weekend').classList.toggle('hidden', tab !== 'weekend');
+  // on mobile, show todo panel inside left col
+  const isMobile = window.innerWidth < 700;
+  document.getElementById('view-todo').classList.toggle('hidden', !(tab === 'todo' && isMobile));
+  if (tab === 'todo' && isMobile) {
+    document.getElementById('view-todo').innerHTML = '';
+    document.getElementById('view-todo').appendChild(document.querySelector('.todo-panel').cloneNode(true));
+  }
+  if (tab === 'weekend') buildWeekendTotals();
+  if (tab === 'week') updateTotals();
+}
+
+// ══════════════════════════════════════════════
+// SCHEDULE BUILDERS
+// ══════════════════════════════════════════════
+function buildDaySelector() {
+  const cont = document.getElementById('day-selector');
+  cont.innerHTML = '';
+  WEEKDAYS.forEach(d => {
+    const pill = document.createElement('button');
+    pill.className = 'day-pill' + (d.id === activeDay ? ' active' : '');
+    pill.textContent = d.label;
+    pill.onclick = () => { activeDay = d.id; buildDaySelector(); buildWeekTimeline(); updateTotals(); };
+    cont.appendChild(pill);
+  });
+}
+
+function buildWeekTimeline() {
+  buildTimeline(document.getElementById('tl-week'), WEEK_TEMPLATE, activeDay);
+}
+
+function buildWeekendTimeline() {
+  const cont = document.getElementById('tl-weekend');
+  cont.innerHTML = '';
+  ['sab','dom'].forEach((dayId, di) => {
+    const lbl = document.createElement('div');
+    lbl.className = 'sec-label';
+    lbl.textContent = di === 0 ? 'Sábado' : 'Domingo';
+    cont.appendChild(lbl);
+    const tl = document.createElement('div');
+    tl.className = 'timeline';
+    cont.appendChild(tl);
+    buildTimeline(tl, WEEKEND_BLOCKS, dayId);
+  });
+}
+
+function buildTimeline(container, blocks, dayPrefix) {
+  container.innerHTML = '';
+  blocks.forEach(b => {
+    const uid = b.type === 'study' ? `${dayPrefix}-${b.id}` : null;
+    const asgn = uid ? assignments[uid] : null;
+    const dotColor = asgn ? SUBJECTS[asgn.key].color : (b.type === 'break' ? '#F9A8D4' : 'var(--border)');
+    const row = document.createElement('div');
+    row.className = 'tl-row';
+    row.innerHTML = `
+      <div class="tl-time"><span class="tl">${b.start}</span><span class="td">${fmtMin(b.minutes)}</span></div>
+      <div class="tl-dot" style="border-color:${dotColor};${b.type==='break'?'background:#FCE7F3':''}"></div>
+      <div class="tl-content" data-uid="${uid||''}">
+        ${b.type === 'study' ? renderSB(uid, b, asgn) : `<div class="brk">${b.icon} ${b.note}</div>`}
+      </div>`;
+    if (b.type === 'study') setupDrop(row.querySelector('.tl-content'), uid, b);
+    container.appendChild(row);
+  });
+}
+
+function renderSB(uid, b, asgn) {
+  if (!asgn) return `<div class="sb" data-uid="${uid}" onclick="openModal('${uid}')">
+    <span class="sb-tag">Bloco · ${fmtMin(b.minutes)}</span>
+    <div class="sb-main" style="font-style:italic;font-weight:400;color:var(--ink-muted)">Clique para atribuir disciplina…</div>
+  </div>`;
+  const sub = SUBJECTS[asgn.key];
+  return `<div class="sb assigned ${asgn.key}" onclick="loadTimer('${asgn.key}','${asgn.label}',${b.minutes})">
+    <span class="sb-tag" style="color:${sub.color}">Bloco · ${fmtMin(b.minutes)}
+      <button class="sb-remove" onclick="event.stopPropagation();removeAsgn('${uid}')">✕</button>
+    </span>
+    <div class="sb-main">${asgn.label}</div>
+    <div class="sb-hint">▶ iniciar timer</div>
+  </div>`;
+}
+
+// ── DRAG ──
+function setupChipDrag() {
+  document.querySelectorAll('.chip[draggable]').forEach(chip => {
+    chip.addEventListener('dragstart', () => { dragKey = chip.dataset.key; dragLabel = chip.dataset.label; });
+    chip.addEventListener('dragend',   () => { dragKey = dragLabel = null; document.querySelectorAll('.sb').forEach(s=>s.classList.remove('drag-over')); });
+  });
+}
+
+function setupDrop(col, uid, b) {
+  col.addEventListener('dragover', e => { e.preventDefault(); col.querySelector('.sb')?.classList.add('drag-over'); });
+  col.addEventListener('dragleave', () => col.querySelector('.sb')?.classList.remove('drag-over'));
+  col.addEventListener('drop', e => {
+    e.preventDefault();
+    col.querySelector('.sb')?.classList.remove('drag-over');
+    if (dragKey) assign(uid, dragKey, dragLabel);
+  });
+}
+
+function assign(uid, key, label) {
+  assignments[uid] = { key, label };
+  rebuild();
+  showToast(`✓ ${label} atribuída`);
+}
+
+function removeAsgn(uid) { delete assignments[uid]; rebuild(); }
+
+function rebuild() {
+  buildWeekTimeline();
+  buildWeekendTimeline();
+  updateTotals();
+  buildWeekendTotals();
+}
+
+// ── MODAL ──
+function openModal(uid) {
+  modalTarget = uid;
+  const list = document.getElementById('modal-list');
+  list.innerHTML = '';
+  Object.entries(SUBJECTS).forEach(([key, sub]) => {
+    const btn = document.createElement('button');
+    btn.className = 'msb';
+    btn.style.cssText = `border-color:${sub.color};color:${sub.color};background:${sub.bg};`;
+    btn.textContent = sub.label;
+    btn.onclick = () => { assign(uid, key, sub.label); closeModal(); };
+    list.appendChild(btn);
+  });
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id==='modal') closeModal(); });
+
+// ── TIMER ──
+let totalSec = 90*60, remaining = totalSec, timerInt = null, running = false;
+const tDisplay = document.getElementById('tDisplay');
+const tBar     = document.getElementById('tBar');
+const tName    = document.getElementById('tName');
+const tMeta    = document.getElementById('tMeta');
+
+function pad(n) { return String(n).padStart(2,'0'); }
+function fmtSec(s) { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60; return h>0?`${pad(h)}:${pad(m)}:${pad(sc)}`:`${pad(m)}:${pad(sc)}`; }
+function fmtMin(min) { if(min<60)return min+' min'; const h=Math.floor(min/60),r=min%60; return h+'h'+(r?pad(r):''); }
+function updateDisp() {
+  tDisplay.textContent = fmtSec(remaining);
+  tBar.style.width = (totalSec>0?(remaining/totalSec)*100:100)+'%';
+  tDisplay.className = remaining===0?'t-display done':(running?'t-display running':'t-display');
+  tBar.className = remaining===0?'t-bar done':'t-bar';
+}
+function loadTimer(key, label, minutes) {
+  if (running) { showToast('⏸ Pause o timer antes de trocar'); return; }
+  tName.textContent = label;
+  tMeta.textContent = fmtMin(minutes);
+  totalSec = minutes*60; remaining = totalSec;
+  updateDisp();
+  document.querySelector('.timer-widget').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function startTimer() {
+  if (remaining===0) { remaining=totalSec; updateDisp(); }
+  running=true;
+  document.getElementById('btnStart').style.display='none';
+  document.getElementById('btnPause').style.display='';
+  timerInt = setInterval(()=>{
+    remaining--;
+    updateDisp();
+    if(remaining<=0){ clearInterval(timerInt); running=false; document.getElementById('btnStart').style.display=''; document.getElementById('btnPause').style.display='none'; showToast('🎉 Bloco concluído!'); }
+  },1000);
+}
+function pauseTimer() { clearInterval(timerInt); running=false; document.getElementById('btnStart').style.display=''; document.getElementById('btnPause').style.display='none'; tDisplay.className='t-display'; }
+function resetTimer()  { clearInterval(timerInt); running=false; remaining=totalSec; document.getElementById('btnStart').style.display=''; document.getElementById('btnPause').style.display='none'; updateDisp(); }
+
+// ── TOTALS ──
+function updateTotals() {
+  const uids = WEEK_TEMPLATE.filter(b=>b.type==='study').map(b=>`${activeDay}-${b.id}`);
+  document.getElementById('totals-title').textContent = `Horas hoje (${WEEKDAYS.find(d=>d.id===activeDay).label})`;
+  renderTotals(uids, WEEK_TEMPLATE, 'totals-grid');
+}
+function buildWeekendTotals() {
+  const uids = [];
+  ['sab','dom'].forEach(day => WEEKEND_BLOCKS.filter(b=>b.type==='study').forEach(b=>uids.push(`${day}-${b.id}`)));
+  renderTotals(uids, WEEKEND_BLOCKS, 'totals-grid-we');
+}
+function renderTotals(uids, blocks, gridId) {
+  const byKey = {};
+  uids.forEach(uid => {
+    const a = assignments[uid]; if(!a) return;
+    const rawId = uid.split('-').slice(1).join('-');
+    const blk = blocks.find(b=>b.id===rawId);
+    if(blk) byKey[a.key] = (byKey[a.key]||0) + blk.minutes;
+  });
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.innerHTML = '';
+  const entries = Object.entries(byKey);
+  if (!entries.length) { grid.innerHTML='<p style="font-size:12px;color:var(--ink-muted);grid-column:1/-1;">Atribua disciplinas para ver o total.</p>'; return; }
+  let total=0;
+  entries.forEach(([key,min])=>{ total+=min; const sub=SUBJECTS[key]; const el=document.createElement('div'); el.className='ti'; el.innerHTML=`<span class="tl2">${sub.label}</span><span class="tv" style="color:${sub.color}">${fmtMin(min)}</span>`; grid.appendChild(el); });
+  const tot=document.createElement('div'); tot.className='ti'; tot.innerHTML=`<span class="tl2">Total</span><span class="tv" style="color:var(--ink)">${fmtMin(total)}</span>`; grid.prepend(tot);
+}
+
+// ══════════════════════════════════════════════
+// TO-DO
+// ══════════════════════════════════════════════
+function buildTodoFilters() {
+  const cont = document.getElementById('todo-filters');
+  cont.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'tf-btn' + (todoFilter==='all'?' active':'');
+  all.textContent = 'Todas';
+  if (todoFilter==='all') all.style.cssText='background:#BE185D;color:#fff;border-color:#BE185D;';
+  all.onclick = () => { todoFilter='all'; buildTodoFilters(); renderTasks(); };
+  cont.appendChild(all);
+
+  Object.entries(SUBJECTS).forEach(([key,sub]) => {
+    const btn = document.createElement('button');
+    btn.className = 'tf-btn' + (todoFilter===key?' active':'');
+    btn.textContent = sub.label.split(' ')[0];
+    if (todoFilter===key) btn.style.cssText=`background:${sub.color};color:#fff;border-color:${sub.color};`;
+    btn.onclick = () => { todoFilter=key; buildTodoFilters(); renderTasks(); };
+    cont.appendChild(btn);
+  });
+}
+
+function addTask() {
+  const input = document.getElementById('task-input');
+  const sel   = document.getElementById('task-subject');
+  const text  = input.value.trim();
+  if (!text) return;
+  tasks.push({ id: Date.now(), text, key: sel.value, done: false });
+  saveTasks();
+  input.value = '';
+  renderTasks();
+  renderProgress();
+  showToast('✓ Tarefa adicionada');
+}
+
+function toggleTask(id) {
+  const t = tasks.find(t=>t.id===id);
+  if (t) { t.done = !t.done; saveTasks(); renderTasks(); renderProgress(); }
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t=>t.id!==id);
+  saveTasks();
+  renderTasks();
+  renderProgress();
+}
+
+function renderTasks() {
+  const list = document.getElementById('todo-list');
+  const filtered = todoFilter==='all' ? tasks : tasks.filter(t=>t.key===todoFilter);
+  // sort: undone first
+  const sorted = [...filtered].sort((a,b) => a.done - b.done);
+
+  if (!sorted.length) {
+    list.innerHTML = `<div class="todo-empty">Nenhuma tarefa${todoFilter!=='all'?' nesta disciplina':''}.<br><span style="font-size:11px">Use o campo acima para adicionar ✨</span></div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  sorted.forEach(t => {
+    const sub = SUBJECTS[t.key];
+    const item = document.createElement('div');
+    item.className = 'task-item';
+    item.innerHTML = `
+      <div class="task-check${t.done?' done':''}" onclick="toggleTask(${t.id})" style="${t.done?`background:${sub.color};border-color:${sub.color};`:`border-color:${sub.color};`}">
+        ${t.done ? '✓' : ''}
+      </div>
+      <div class="task-body">
+        <div class="task-text${t.done?' done':''}">${escHtml(t.text)}</div>
+        <span class="task-badge" style="background:${sub.bg};color:${sub.color}">${sub.label.split(' ')[0]}</span>
+      </div>
+      <button class="task-del" onclick="deleteTask(${t.id})">✕</button>`;
+    list.appendChild(item);
+  });
+}
+
+function renderProgress() {
+  const cont = document.getElementById('todo-progress');
+  cont.innerHTML = '';
+  if (!tasks.length) return;
+
+  Object.entries(SUBJECTS).forEach(([key, sub]) => {
+    const all  = tasks.filter(t=>t.key===key);
+    if (!all.length) return;
+    const done = all.filter(t=>t.done).length;
+    const pct  = Math.round((done/all.length)*100);
+    const row  = document.createElement('div');
+    row.className = 'prog-row';
+    row.innerHTML = `
+      <span class="prog-label">${sub.label.split(' ')[0]}</span>
+      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${pct}%;background:${sub.color}"></div></div>
+      <span class="prog-count">${done}/${all.length}</span>`;
+    cont.appendChild(row);
+  });
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── TOAST ──
+let toastT;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+buildDaySelector();
+buildWeekTimeline();
+buildWeekendTimeline();
+setupChipDrag();
+updateDisp();
+updateTotals();
+buildTodoFilters();
+renderTasks();
+renderProgress();
+</script>
+</body>
+</html>
